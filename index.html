@@ -8,8 +8,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        html, body { height: 100%; }
-        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 50%, #d1d9e6 100%);
@@ -58,54 +56,51 @@
         }
         
         .panel {
-            background: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.03);
             border-radius: 12px;
-            border: 1px solid rgba(0,0,0,0.15);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            height: 100%;
         }
         
         .panel-header {
             padding: 12px 16px;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            background: rgba(0,0,0,0.02);
-            flex-shrink: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.02);
         }
         .panel-header h2 {
             font-size: 1rem;
             font-weight: 600;
-            color: #0077aa;
+            color: #00d4ff;
         }
         
-        .desmos-panel { display: flex; flex-direction: column; height: 100%; }
+        .desmos-panel { display: flex; flex-direction: column; }
         #calculator { 
             width: 100%; 
             height: 100%; 
             flex: 1;
             min-height: 500px;
-            background: #ffffff;
-            border: 1px solid rgba(0,0,0,0.05);
+            background: #0a0a15; 
         }
         
-        .canvas-panel { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 500px; }
+        .canvas-panel { position: relative; display: flex; flex-direction: column; min-height: 500px; }
         #gameCanvas { 
             width: 100%; 
             height: 100%; 
             flex: 1;
             display: block;
-            background: #ffffff;
-            border: 1px solid rgba(0,0,0,0.05);
+            background: #0a0a15;
         }
         
         .controls {
             flex-shrink: 0;
             padding: 15px;
-            background: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.9);
             border-radius: 12px;
             border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
         }
         
         .control-row {
@@ -166,7 +161,7 @@
             align-items: center;
             gap: 15px;
             padding: 10px 16px;
-            background: rgba(255,255,255,0.5);
+            background: rgba(0,0,0,0.05);
             border-radius: 8px;
             border: 1px solid rgba(0,0,0,0.1);
             margin-bottom: 12px;
@@ -239,7 +234,7 @@
         }
         .instructions strong { color: #0077aa; }
         .instructions ul { padding-left: 18px; margin-top: 8px; }
-        .instructions li { margin-bottom: 4px; }
+        .instructions li { margin-bottom: 4px; color: #4a5568; }
         
         .function-display {
             background: rgba(0,0,0,0.03);
@@ -347,18 +342,18 @@ let winDelay = 0;
         let lastScreenTransform = null;
         
         const colors = {
-            bg: '#ffffff',
-            axis: '#a0aec0',
-            grid: '#e2e8f0',
-            curve: '#0077aa',
-            curveGlow: 'rgba(0,119,170,0.3)',
+            bg: '#0a0a15',
+            axis: '#2a2a4a',
+            grid: '#1a1a3a',
+            curve: '#00d4ff',
+            curveGlow: 'rgba(0,212,255,0.3)',
             hole: '#ff6b6b',
-            goal: '#009650',
-            goalGlow: 'rgba(0,150,80,0.4)',
+            goal: '#00ff88',
+            goalGlow: 'rgba(0,255,136,0.4)',
             ball: '#ff6b6b',
             ballTrail: 'rgba(255,107,107,0.3)',
-            text: '#2d3748',
-            dim: '#a0aec0'
+            text: '#eaeaea',
+            dim: '#666'
         };
         
         // ========== INIT ==========
@@ -371,7 +366,7 @@ let winDelay = 0;
             calculator = Desmos.GraphingCalculator(document.getElementById('calculator'), {
                 expressions: true, settingsMenu: false, zoomButtons: true, expressionsTopBar: false,
                 keypad: false, border: false, lockViewport: false, projectorMode: false,
-                colors: { background: '#ffffff', axis: '#888', grid: '#e0e0e0', text: '#2d3748' }
+                colors: { background: '#0a0a15', axis: '#333', grid: '#222', text: '#888' }
             });
             
             calculator.observe('change', function() {
@@ -422,12 +417,12 @@ let winDelay = 0;
             calculator.setMathBounds(L.view);
             
             calculator.setExpression({
-                id: 'goal', latex: `(${goalX},${goalY})`, color: '#009650',
+                id: 'goal', latex: `(${goalX},${goalY})`, color: '#00ff88',
                 pointStyle: Desmos.Styles.OPEN, pointSize: 20,
                 label: 'GOAL', labelOrientation: 'right'
             });
             calculator.setExpression({
-                id: 'goalInner', latex: `(${goalX},${goalY})`, color: '#009650',
+                id: 'goalInner', latex: `(${goalX},${goalY})`, color: '#00ff88',
                 pointStyle: Desmos.Styles.POINT, pointSize: 8
             });
             
@@ -525,7 +520,7 @@ let winDelay = 0;
             calculator.setExpression({ 
                 id: 'userFn', 
                 latex: 'f(x)=' + jsToLatex(f), 
-                color: '#0077aa', 
+                color: '#00d4ff', 
                 lineWidth: 3 
             });
             
@@ -729,7 +724,7 @@ let winDelay = 0;
             updateStatus(`🎉 Level ${currentLevel + 1} Complete! Ball reached the hole!`, 'success');
             
             const holePoint = pathPoints[pathPoints.length - 1];
-            spawnParticles(holePoint.x, holePoint.y, 20, '#009650');
+            spawnParticles(holePoint.x, holePoint.y, 20, '#ff6b6b');
             
             winDelay = 120;
         }
@@ -905,7 +900,7 @@ let winDelay = 0;
             
             const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
             grad.addColorStop(0, colors.goalGlow);
-            grad.addColorStop(1, colors.goal.replace('#', 'rgba(').replace(')', ',0)').replace(/([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i, (m, r, g, b) => parseInt(r,16) + ',' + parseInt(g,16) + ',' + parseInt(b,16) + ',0)');
+            grad.addColorStop(1, 'rgba(0,255,136,0)');
             ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.arc(sx, sy, glowR, 0, Math.PI * 2);
@@ -944,15 +939,15 @@ let winDelay = 0;
                     trailParticles.splice(i, 1);
                     continue;
                 }
-                ctx.fillStyle = `rgba(255,107,107,${p.life * 0.4})`;
+                ctx.fillStyle = `rgba(0,255,136,${p.life * 0.4})`;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
                 ctx.fill();
             }
             
             const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 2);
-            grad.addColorStop(0, 'rgba(255,107,107,0.4)');
-            grad.addColorStop(1, 'rgba(255,107,107,0)');
+            grad.addColorStop(0, 'rgba(0,255,136,0.4)');
+            grad.addColorStop(1, 'rgba(0,255,136,0)');
             ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.arc(sx, sy, r * 2, 0, Math.PI * 2);
@@ -969,7 +964,7 @@ let winDelay = 0;
             ctx.fill();
         }
         
-        function spawnParticles(mathX, mathY, count, color = '#009650') {
+        function spawnParticles(mathX, mathY, count, color = '#00ff88') {
             if (!lastScreenTransform) return;
             const { toScreenX, toScreenY } = lastScreenTransform;
             for (let i = 0; i < count; i++) {
