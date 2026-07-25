@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destination's Limit - Calculus Game</title>
+    <script src="https://www.desmos.com/api/v1.12/calculator.js?apiKey=47fc5d8245c34738b2de838483a73507"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body { height: 100%; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 50%, #d1d9e6 100%);
+            min-height: 100vh;
+            color: #2d3748;
+            overflow: auto;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 15px;
+            gap: 15px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 10px 0;
+            flex-shrink: 0;
+        }
+        header h1 { 
+            font-size: 1.8rem; 
+            background: linear-gradient(135deg, #0077aa 0%, #cc4444 100%); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text; 
+            margin-bottom: 3px; 
+        }
+        header p { color: #718096; font-size: 0.9rem; }
+        
+        .game-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
+            height: 100%;
+            min-height: 500px;
+        }
+        @media (max-width: 1100px) {
+            .game-row { grid-template-columns: 1fr; }
+        }
+        
+        .panel {
+            background: rgba(255,255,255,0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.15);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            background: rgba(0,0,0,0.02);
+            flex-shrink: 0;
+        }
+        .panel-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0077aa;
+        }
+        
+        .desmos-panel { display: flex; flex-direction: column; height: 100%; }
+        #calculator { 
+            width: 100%; 
+            height: 100%; 
+            flex: 1;
+            min-height: 500px;
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .canvas-panel { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 500px; }
+        #gameCanvas { 
+            width: 100%; 
+            height: 100%; 
+            flex: 1;
+            display: block;
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .controls {
+            flex-shrink: 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .control-row:last-child { margin-bottom: 0; }
+        
+        .control-group { flex: 1; min-width: 200px; }
+        .control-group label { 
+            display: block; 
+            margin-bottom: 6px; 
+            font-weight: 600; 
+            color: #0077aa; 
+            font-size: 0.85rem; 
+        }
+        .control-group input, .control-group select {
+            width: 100%; 
+            padding: 10px 14px; 
+            border-radius: 6px; 
+            border: 1px solid rgba(0,0,0,0.2);
+            background: rgba(255,255,255,0.9); 
+            color: #2d3748; 
+            font-size: 0.95rem; 
+        }
+        .control-group select { appearance: none; }
+        .control-group input:focus, .control-group select:focus { 
+            outline: none; 
+            border-color: #0077aa; 
+            box-shadow: 0 0 0 2px rgba(0,119,170,0.2); 
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .btn-primary { background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color: #0a0a15; }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,212,255,0.4); }
+        .btn-success { background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%); color: #0a0a15; }
+        .btn-success:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,255,136,0.4); }
+        .btn-danger { background: linear-gradient(135deg, #ff6b6b 0%, #cc4444 100%); color: #fff; }
+        .btn-danger:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,107,107,0.4); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+        
+        .level-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 16px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            margin-bottom: 12px;
+        }
+        .level-badge { 
+            background: linear-gradient(135deg, #ff6b6b 0%, #cc4444 100%); 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-weight: 700; 
+            font-size: 1rem; 
+        }
+        .goal-display { 
+            color: #0077aa; 
+            font-weight: 600; 
+            font-family: monospace; 
+            font-size: 0.95rem;
+        }
+        .timer-display {
+            margin-left: auto;
+            font-family: monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #0077aa;
+            background: rgba(0,119,170,0.1);
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,119,170,0.3);
+            min-width: 70px;
+            text-align: center;
+        }
+        .timer-display.warning { color: #cc9900; background: rgba(204,153,0,0.1); border-color: rgba(204,153,0,0.3); }
+        .timer-display.danger { color: #cc4444; background: rgba(204,68,68,0.1); border-color: rgba(204,68,68,0.3); animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+        
+        .status-bar {
+            min-height: 36px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .status-bar.info { background: rgba(0,119,170,0.1); border: 1px solid rgba(0,119,170,0.3); color: #0077aa; }
+        .status-bar.success { background: rgba(0,150,80,0.1); border: 1px solid rgba(0,150,80,0.3); color: #009650; }
+        .status-bar.error { background: rgba(204,68,68,0.1); border: 1px solid rgba(204,68,68,0.3); color: #cc4444; }
+        .status-bar.warning { background: rgba(204,153,0,0.1); border: 1px solid rgba(204,153,0,0.3); color: #cc9900; }
+        
+        .hint-box {
+            background: rgba(204,153,0,0.1);
+            /* border: 1px solid rgba(204,153,0,0.3); */
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            display: none;
+            margin-top: 10px;
+        }
+        .hint-box.show { display: block; }
+        .hint-box strong { color: #cc9900; }
+        
+        .instructions {
+            background: rgba(0,119,170,0.1);
+            /* border: 1px solid rgba(0,119,170,0.3); */
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: 0.8rem;
+            line-height: 1.7;
+            margin-top: 10px;
+        }
+        .instructions strong { color: #0077aa; }
+        .instructions ul { padding-left: 18px; margin-top: 8px; }
+        .instructions li { margin-bottom: 4px; }
+        
+        .function-display {
+            background: rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #4a5568;
+            margin-bottom: 10px;
+            min-height: 22px;
+            word-break: break-all;
+        }
+        .function-display.valid { color: #009650; border-color: rgba(0,150,80,0.3); }
+        .function-display.invalid { color: #cc4444; border-color: rgba(204,68,68,0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Destination's Limit</h1>
+            <p>Create a function with a removable discontinuity (hole) where the limit equals the goal</p>
+        </header>
+        
+        <div class="game-row">
+            <div class="panel desmos-panel">
+                <div class="panel-header"><h2>Desmos Calculator - Enter Function</h2></div>
+                <div id="calculator"></div>
+            </div>
+            
+            <div class="panel canvas-panel">
+                <div class="panel-header"><h2>Limit Simulation - Ball Drop</h2></div>
+                <canvas id="gameCanvas"></canvas>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="level-info">
+                <span class="level-badge" id="levelBadge">Level 1</span>
+                <span class="goal-display" id="goalDisplay">Goal: (0, 0)</span>
+            </div>
+            
+            <div class="function-display" id="functionDisplay">Enter a function in Desmos with a hole at the goal's x-coordinate</div>
+            
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="functionInput">Manual Function Input (optional)</label>
+                    <input type="text" id="functionInput" placeholder="e.g., (x-2)*(x+2)/(x-2)" spellcheck="false">
+                </div>
+                <button class="btn btn-primary" id="validateBtn" onclick="validateFunction()">Validate</button>
+                <button class="btn btn-success" id="startBtn" onclick="startGame()">Start</button>
+                <button class="btn btn-danger" id="resetBtn" onclick="resetLevel()" disabled>Reset</button>
+            </div>
+            
+            <div class="control-row">
+                <button class="btn btn-primary" id="nextBtn" onclick="nextLevel()">Next Level</button>
+                <button class="btn btn-primary" id="hintBtn" onclick="toggleHint()">Show Hint</button>
+            </div>
+            
+            <div class="hint-box" id="hintBox"></div>
+            
+            <div class="status-bar info" id="statusBar">Click "Next Level" to begin</div>
+            
+            <div class="instructions">
+                <strong>How to Play:</strong>
+                <ul>
+                    <li>Each level shows a green goal at <code>(x, y)</code> on both panels</li>
+                    <li>Enter a function <code>f(x)</code> in Desmos with a <strong>removable discontinuity (hole)</strong> at the goal's x-coordinate</li>
+                    <li>The <strong>limit</strong> of f(x) as x approaches the hole must equal the goal's y-coordinate</li>
+                    <li>Click <strong>Validate</strong> to check your function, then <strong>Start</strong> to drop the ball</li>
+                    <li>The ball follows the curve through the hole — reach the goal within <strong>6 seconds</strong>!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== LEVEL DATA ==========
+        const levels = [
+            { goalX: 2, goalY: 4, view: { left: -1, right: 5, bottom: -1, top: 7 }, hint: "Form: (x - 2) * (x + 2) / (x - 2). Limit at x=2 is 4." },
+            { goalX: -2, goalY: 3, view: { left: -5, right: 1, bottom: -1, top: 5 }, hint: "Form: (x + 2) * k / (x + 2). Need limit 3, so use 3*(x+2)/(x+2)." },
+            { goalX: 3, goalY: -2, view: { left: 0, right: 6, bottom: -5, top: 1 }, hint: "Form: (x - 3) * (-2) / (x - 3). Limit at x=3 is -2." },
+            { goalX: 1.5, goalY: 5, view: { left: -1, right: 4, bottom: 0, top: 7 }, hint: "Form: (x - 1.5) * (10/3) / (x - 1.5) or 5*(x-1.5)/(x-1.5). Limit at x=1.5 is 5." },
+            { goalX: -1, goalY: 2, view: { left: -4, right: 2, bottom: -1, top: 4 }, hint: "Try trig: 2*sin(x+1)/(x+1). Limit at x=-1 is 2." },
+        ];
+        
+        // ========== STATE ==========
+        let currentLevel = 0;
+        let calculator = null;
+        let canvas = null, ctx = null;
+        let isAnimating = false;
+        let gameStartTime = 0;
+let winDelay = 0;
+        let loseDelay = 0;
+        
+        let ball = { x: 0, y: 0, vx: 0, vy: 0, radius: 10 };
+        let pathPoints = [];
+        let holeX = 0, holeY = 0, goalX = 0, goalY = 0;
+        let validatedFunction = null;
+        let validatedLimit = null;
+        let canvasBounds = { left: -2, right: 5, bottom: -2, top: 7 };
+        
+        let trailParticles = [];
+        let celebrationParticles = [];
+        let lastScreenTransform = null;
+        
+        const colors = {
+            bg: '#ffffff',
+            axis: '#a0aec0',
+            grid: '#e2e8f0',
+            curve: '#0077aa',
+            curveGlow: 'rgba(0,119,170,0.3)',
+            hole: '#ff6b6b',
+            goal: '#009650',
+            goalGlow: 'rgba(0,150,80,0.4)',
+            ball: '#ff6b6b',
+            ballTrail: 'rgba(255,107,107,0.3)',
+            text: '#2d3748',
+            dim: '#a0aec0'
+        };
+        
+        // ========== INIT ==========
+        function init() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            calculator = Desmos.GraphingCalculator(document.getElementById('calculator'), {
+                expressions: true, settingsMenu: false, zoomButtons: true, expressionsTopBar: false,
+                keypad: false, border: false, lockViewport: false, projectorMode: false,
+                colors: { background: '#ffffff', axis: '#888', grid: '#e0e0e0', text: '#2d3748' }
+            });
+            
+            calculator.observe('change', function() {
+                const exprs = calculator.getExpressions();
+                if (exprs.length > 0) {
+                    const lastExpr = exprs[exprs.length - 1];
+                    if (lastExpr.latex && !lastExpr.id?.startsWith('goal') && !lastExpr.id?.startsWith('hole')) {
+                        document.getElementById('functionInput').value = latexToJs(lastExpr.latex);
+                        document.getElementById('functionDisplay').textContent = 'f(x) = ' + lastExpr.latex;
+                        document.getElementById('functionDisplay').className = 'function-display';
+                    }
+                }
+            });
+            
+            nextLevel();
+            animate();
+        }
+        
+        function resizeCanvas() {
+            const panel = document.querySelector('.canvas-panel');
+            const rect = panel.getBoundingClientRect();
+            const headerHeight = panel.querySelector('.panel-header').offsetHeight;
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = (rect.height - headerHeight) * window.devicePixelRatio;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = (rect.height - headerHeight) + 'px';
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        
+        // ========== LEVEL MANAGEMENT ==========
+        function nextLevel() {
+            if (isAnimating) return;
+            resetGameState();
+            
+            if (currentLevel >= levels.length) currentLevel = 0;
+            
+            const L = levels[currentLevel];
+            goalX = L.goalX; goalY = L.goalY; holeX = L.goalX;
+            
+            document.getElementById('levelBadge').textContent = 'Level ' + (currentLevel + 1);
+            document.getElementById('goalDisplay').textContent = `Goal: (${goalX}, ${goalY})`;
+            document.getElementById('hintBox').innerHTML = `<strong>💡 Hint:</strong> ${L.hint}`;
+            document.getElementById('functionInput').value = '';
+            document.getElementById('functionDisplay').textContent = 'Enter a function in Desmos with a hole at the goal\'s x-coordinate';
+            document.getElementById('functionDisplay').className = 'function-display';
+            document.getElementById('hintBox').classList.remove('show');
+            
+            calculator.setMathBounds(L.view);
+            
+            calculator.setExpression({
+                id: 'goal', latex: `(${goalX},${goalY})`, color: '#009650',
+                pointStyle: Desmos.Styles.OPEN, pointSize: 20,
+                label: 'GOAL', labelOrientation: 'right'
+            });
+            calculator.setExpression({
+                id: 'goalInner', latex: `(${goalX},${goalY})`, color: '#009650',
+                pointStyle: Desmos.Styles.POINT, pointSize: 8
+            });
+            
+            canvasBounds = { 
+                left: L.view.left - 0.5, 
+                right: L.view.right + 0.5, 
+                bottom: L.view.bottom - 0.5, 
+                top: L.view.top + 0.5 
+            };
+            
+            ball.x = holeX - 2;
+            ball.y = canvasBounds.top - 0.5;
+            ball.vx = 0; ball.vy = 0;
+            
+            const timerEl = document.getElementById('timerDisplay');
+            if (timerEl) { timerEl.textContent = '∞'; timerEl.className = 'timer-display'; }
+            
+            // Re-enable buttons for new level
+            document.getElementById('validateBtn').disabled = false;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = true;
+            
+            updateStatus(`Level ${currentLevel + 1}: Goal at (${goalX}, ${goalY}). Enter function in Desmos, then Validate.`, 'info');
+        }
+        
+        function resetGameState() {
+            isAnimating = false;
+            winDelay = 0;
+            loseDelay = 0;
+            pathPoints = [];
+            validatedFunction = null;
+            validatedLimit = null;
+            
+            const exprs = calculator.getExpressions();
+            exprs.forEach(e => {
+                if (!e.id?.startsWith('goal')) {
+                    calculator.removeExpression({ id: e.id });
+                }
+            });
+        }
+        
+        function resetLevel() {
+            if (isAnimating) return;
+            resetGameState();
+            nextLevel();
+        }
+        
+        // ========== FUNCTION VALIDATION ==========
+        function validateFunction() {
+            if (isAnimating) return;
+            
+            let f = document.getElementById('functionInput').value.trim();
+            if (!f) {
+                const exprs = calculator.getExpressions();
+                for (let i = exprs.length - 1; i >= 0; i--) {
+                    const e = exprs[i];
+                    if (e.latex && !e.id?.startsWith('goal') && !e.id?.startsWith('hole')) {
+                        f = latexToJs(e.latex);
+                        document.getElementById('functionInput').value = f;
+                        break;
+                    }
+                }
+            }
+            
+            if (!f) {
+                updateStatus('No function found. Enter one in Desmos or the input box.', 'error');
+                return;
+            }
+            
+            const limitVal = evaluateLimit(f, holeX);
+            
+            if (limitVal === null || isNaN(limitVal)) {
+                updateStatus('Could not evaluate limit at x = ' + holeX, 'error');
+                document.getElementById('functionDisplay').className = 'function-display invalid';
+                document.getElementById('functionDisplay').textContent = 'f(x) = ' + f + '  ❌ Invalid';
+                return;
+            }
+            
+            const diff = Math.abs(limitVal - goalY);
+            
+            // Check if function has a removable discontinuity (hole) at holeX
+            // by verifying the function is undefined at holeX but limit exists
+            const hasHole = hasRemovableDiscontinuity(f, holeX);
+            
+            calculator.setExpression({ 
+                id: 'hole', 
+                latex: `(${holeX},${limitVal.toFixed(3)})`, 
+                color: '#ff6b6b', 
+                pointStyle: Desmos.Styles.OPEN, 
+                pointSize: 14, 
+                label: 'Limit: ' + limitVal.toFixed(3), 
+                labelOrientation: 'left' 
+            });
+            
+            calculator.setExpression({ 
+                id: 'userFn', 
+                latex: 'f(x)=' + jsToLatex(f), 
+                color: '#0077aa', 
+                lineWidth: 3 
+            });
+            
+            if (!hasHole) {
+                document.getElementById('functionDisplay').className = 'function-display invalid';
+                document.getElementById('functionDisplay').textContent = 'f(x) = ' + f + '  ⚠ No hole at x=' + holeX + ' (continuous here)';
+                updateStatus(`⚠ Function is continuous at x=${holeX}. Ball will follow curve.`, 'warning');
+                // Still allow Start
+            }
+            
+            if (diff <= 0.15) {
+                validatedFunction = f;
+                validatedLimit = limitVal;
+                generatePathPoints(f, holeX, limitVal);
+                
+                document.getElementById('functionDisplay').className = 'function-display valid';
+                document.getElementById('functionDisplay').textContent = 'f(x) = ' + f + '  ✓ Limit = ' + limitVal.toFixed(3);
+                updateStatus(`✓ Valid! Limit ${limitVal.toFixed(3)} matches goal ${goalY}. Click Start.`, 'success');
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('validateBtn').disabled = true;
+            } else {
+                validatedFunction = f;
+                validatedLimit = limitVal;
+                generatePathPoints(f, holeX, limitVal);
+                
+                document.getElementById('functionDisplay').className = 'function-display invalid';
+                document.getElementById('functionDisplay').textContent = 'f(x) = ' + f + '  ❌ Limit = ' + limitVal.toFixed(3) + ' ≠ ' + goalY;
+                updateStatus(`✗ Limit ${limitVal.toFixed(3)} ≠ goal ${goalY}. You can still try Start.`, 'warning');
+                document.getElementById('startBtn').disabled = false;
+                // Keep validateBtn enabled so user can re-validate after changes
+            }
+        }
+        
+        function generatePathPoints(f, discX, limitY) {
+            pathPoints = [];
+            const startX = discX - 2.5;
+            const endX = discX - 0.02;
+            const steps = 200;
+            
+            for (let i = 0; i <= steps; i++) {
+                const x = startX + (endX - startX) * i / steps;
+                const y = evaluateFunction(f, x);
+                if (y !== null && !isNaN(y) && Math.abs(y) < 100) {
+                    pathPoints.push({ x, y });
+                }
+            }
+            
+            if (pathPoints.length > 0) {
+                // End at the hole/limit position (not the goal)
+                pathPoints.push({ x: discX, y: limitY });
+            }
+        }
+        
+        // ========== GAME ANIMATION ==========
+        function startGame() {
+            if (isAnimating) return;
+            
+            let f = validatedFunction;
+            if (!f) {
+                // Get function from input or Desmos
+                f = document.getElementById('functionInput').value.trim();
+                if (!f) {
+                    const exprs = calculator.getExpressions();
+                    for (let i = exprs.length - 1; i >= 0; i--) {
+                        const e = exprs[i];
+                        if (e.latex && !e.id?.startsWith('goal') && !e.id?.startsWith('hole')) {
+                            f = latexToJs(e.latex);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!f) {
+                updateStatus('Enter a function first!', 'error');
+                return;
+            }
+            
+            // Check if limit matches goal
+            const limitVal = evaluateLimit(f, holeX);
+            if (limitVal !== null && Math.abs(limitVal - goalY) > 0.15) {
+                updateStatus(`⚠ Limit (${limitVal.toFixed(3)}) ≠ goal (${goalY}). Ball will still try!`, 'warning');
+            }
+            
+            // Warn if no hole but still allow start
+            if (!hasRemovableDiscontinuity(f, holeX)) {
+                updateStatus(`⚠ Function is continuous at x=${holeX}. Ball will follow curve.`, 'warning');
+            }
+            
+            // Generate path for any function (valid or not)
+            generatePathPoints(f, holeX, limitVal);
+            validatedFunction = f;
+            
+            isAnimating = true;
+            gameStartTime = Date.now();
+            winDelay = 0;
+            loseDelay = 0;
+            
+            if (pathPoints.length > 0) {
+                ball.x = pathPoints[0].x;
+                ball.y = pathPoints[0].y;
+                ball.vx = 0; ball.vy = 0;
+            }
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = false;
+            updateStatus('Ball dropped! Watch it fall to the limit.', 'info');
+        }
+        
+        function animate() {
+            render();
+            
+            if (isAnimating) {
+                updatePhysics();
+                checkWinLose();
+            } else if (winDelay > 0) {
+                winDelay--;
+                if (winDelay === 0) {
+                    currentLevel++;
+                    nextLevel();
+                }
+            } else if (loseDelay > 0) {
+                loseDelay--;
+                if (loseDelay === 0) {
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('resetBtn').disabled = false;
+                    document.getElementById('validateBtn').disabled = false;
+                    const timerEl = document.getElementById('timerDisplay');
+                    if (timerEl) { timerEl.textContent = '∞'; timerEl.className = 'timer-display'; }
+                    ball.x = pathPoints[0]?.x || holeX - 2;
+                    ball.y = pathPoints[0]?.y || canvasBounds.top - 0.5;
+                    updateStatus('Click Start to try again, or Validate a new function.', 'warning');
+                }
+            }
+            
+            setTimeout(animate, 16);
+        }
+        
+        function updatePhysics() {
+            if (pathPoints.length < 2) return;
+            
+            // Move ball at constant speed along the path
+            const speed = 0.02; // progress per frame
+            
+            // Find current progress based on ball position
+            let currentProgress = 0;
+            for (let i = 0; i < pathPoints.length - 1; i++) {
+                const p1 = pathPoints[i];
+                const p2 = pathPoints[i + 1];
+                const segLen = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                const distToBall = Math.hypot(ball.x - p1.x, ball.y - p1.y);
+                if (distToBall < segLen) {
+                    currentProgress = (i + distToBall / segLen) / (pathPoints.length - 1);
+                    break;
+                }
+            }
+            
+            const newProgress = Math.min(currentProgress + speed, 1);
+            
+            const targetIndex = newProgress * (pathPoints.length - 1);
+            const index = Math.floor(targetIndex);
+            const t = targetIndex - index;
+            
+            if (index < pathPoints.length - 1) {
+                const p1 = pathPoints[index];
+                const p2 = pathPoints[index + 1];
+                ball.x = p1.x + (p2.x - p1.x) * t;
+                ball.y = p1.y + (p2.y - p1.y) * t;
+            } else {
+                ball.x = pathPoints[pathPoints.length - 1].x;
+                ball.y = pathPoints[pathPoints.length - 1].y;
+            }
+        }
+        
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+        
+        function checkWinLose() {
+            // Check if ball reached the hole (last point in pathPoints)
+            const holePoint = pathPoints[pathPoints.length - 1];
+            const distToHole = Math.hypot(ball.x - holePoint.x, ball.y - holePoint.y);
+            
+            // Only win if the hole matches the goal (correct limit)
+            const limitMatchesGoal = Math.abs(holePoint.x - goalX) < 0.1 && Math.abs(holePoint.y - goalY) < 0.1;
+            
+            if (distToHole < 0.3) {
+                if (limitMatchesGoal) {
+                    win();
+                } else {
+                    // Ball reached hole but hole != goal - this is a loss
+                    lose('Ball reached the limit, but limit does not match the goal!');
+                }
+                return;
+            }
+        }
+        
+        function win() {
+            isAnimating = false;
+            const timerEl = document.getElementById('timerDisplay');
+            if (timerEl) { timerEl.textContent = 'Done!'; timerEl.className = 'timer-display'; }
+            updateStatus(`🎉 Level ${currentLevel + 1} Complete! Ball reached the hole!`, 'success');
+            
+            const holePoint = pathPoints[pathPoints.length - 1];
+            spawnParticles(holePoint.x, holePoint.y, 20, '#009650');
+            
+            winDelay = 120;
+        }
+        
+        function lose(reason) {
+            isAnimating = false;
+            const timerEl = document.getElementById('timerDisplay');
+            if (timerEl) { timerEl.textContent = '0.0s'; timerEl.className = 'timer-display danger'; }
+            
+            // Check if the limit matches the goal
+            const limitVal = evaluateLimit(validatedFunction, holeX);
+            const limitMatches = limitVal !== null && Math.abs(limitVal - goalY) <= 0.15;
+            
+            if (limitMatches) {
+                updateStatus('❌ ' + reason, 'error');
+            } else {
+                updateStatus('goal not reached, try again', 'error');
+            }
+            
+            spawnParticles(ball.x, ball.y, 15, '#ff6b6b');
+            
+            loseDelay = 90;
+        }
+        
+        // ========== RENDERING ==========
+        function render() {
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+            
+            ctx.fillStyle = colors.bg;
+            ctx.fillRect(0, 0, width, height);
+            
+            const xScale = width / (canvasBounds.right - canvasBounds.left);
+            const yScale = height / (canvasBounds.top - canvasBounds.bottom);
+            const scale = Math.min(xScale, yScale) * 0.9;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const mathCenterX = (canvasBounds.left + canvasBounds.right) / 2;
+            const mathCenterY = (canvasBounds.bottom + canvasBounds.top) / 2;
+            
+            function toScreenX(x) { return centerX + (x - mathCenterX) * scale; }
+            function toScreenY(y) { return centerY - (y - mathCenterY) * scale; }
+            function toScreenLen(len) { return len * scale; }
+            
+            lastScreenTransform = { toScreenX, toScreenY, toScreenLen };
+            
+            drawGrid(toScreenX, toScreenY, scale, width, height);
+            drawAxes(toScreenX, toScreenY, width, height);
+            
+            if (pathPoints.length > 1) {
+                drawPath(pathPoints, toScreenX, toScreenY);
+            }
+            
+            if (validatedLimit !== null) {
+                drawHole(holeX, validatedLimit, toScreenX, toScreenY, toScreenLen);
+            }
+            
+            drawGoal(goalX, goalY, toScreenX, toScreenY, toScreenLen);
+            
+            if (celebrationParticles.length > 0) {
+                drawCelebrationParticles();
+            }
+            
+            if (isAnimating || ball.x !== 0 || ball.y !== 0) {
+                drawBall(ball.x, ball.y, toScreenX, toScreenY, toScreenLen);
+            }
+            
+            drawLabels(toScreenX, toScreenY);
+        }
+        
+        function drawGrid(toScreenX, toScreenY, scale, width, height) {
+            ctx.strokeStyle = colors.grid;
+            ctx.lineWidth = 1;
+            
+            const startX = Math.floor(canvasBounds.left);
+            const endX = Math.ceil(canvasBounds.right);
+            const startY = Math.floor(canvasBounds.bottom);
+            const endY = Math.ceil(canvasBounds.top);
+            
+            ctx.beginPath();
+            for (let x = startX; x <= endX; x++) {
+                const sx = toScreenX(x);
+                ctx.moveTo(sx, 0);
+                ctx.lineTo(sx, height);
+            }
+            for (let y = startY; y <= endY; y++) {
+                const sy = toScreenY(y);
+                ctx.moveTo(0, sy);
+                ctx.lineTo(width, sy);
+            }
+            ctx.stroke();
+        }
+        
+        function drawAxes(toScreenX, toScreenY, width, height) {
+            ctx.strokeStyle = colors.axis;
+            ctx.lineWidth = 2;
+            
+            const zeroX = toScreenX(0);
+            const zeroY = toScreenY(0);
+            
+            if (zeroX > 0 && zeroX < width) {
+                ctx.beginPath();
+                ctx.moveTo(zeroX, 0);
+                ctx.lineTo(zeroX, height);
+                ctx.stroke();
+            }
+            if (zeroY > 0 && zeroY < height) {
+                ctx.beginPath();
+                ctx.moveTo(0, zeroY);
+                ctx.lineTo(width, zeroY);
+                ctx.stroke();
+            }
+        }
+        
+        function drawPath(points, toScreenX, toScreenY) {
+            ctx.strokeStyle = colors.curveGlow;
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(toScreenX(points[0].x), toScreenY(points[0].y));
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(toScreenX(points[i].x), toScreenY(points[i].y));
+            }
+            ctx.stroke();
+            
+            ctx.strokeStyle = colors.curve;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(toScreenX(points[0].x), toScreenY(points[0].y));
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(toScreenX(points[i].x), toScreenY(points[i].y));
+            }
+            ctx.stroke();
+            
+            ctx.fillStyle = colors.curve;
+            for (let i = 0; i < points.length; i += 10) {
+                const sx = toScreenX(points[i].x);
+                const sy = toScreenY(points[i].y);
+                ctx.beginPath();
+                ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawHole(x, y, toScreenX, toScreenY, toScreenLen) {
+            const sx = toScreenX(x);
+            const sy = toScreenY(y);
+            const r = toScreenLen(0.08);
+            
+            ctx.strokeStyle = colors.hole;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(sx, sy, r, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 2);
+            grad.addColorStop(0, 'rgba(255,107,107,0.3)');
+            grad.addColorStop(1, 'rgba(255,107,107,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(sx, sy, r * 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function drawGoal(x, y, toScreenX, toScreenY, toScreenLen) {
+            const sx = toScreenX(x);
+            const sy = toScreenY(y);
+            const r = toScreenLen(0.12);
+            
+            const pulse = (Math.sin(Date.now() / 200) + 1) / 2;
+            const glowR = r * (1.5 + pulse * 0.5);
+            
+            const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
+            grad.addColorStop(0, colors.goalGlow);
+            grad.addColorStop(1, colors.goal.replace('#', 'rgba(').replace(')', ',0)').replace(/([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i, (m, r, g, b) => parseInt(r,16) + ',' + parseInt(g,16) + ',' + parseInt(b,16) + ',0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(sx, sy, glowR, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = colors.goal;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(sx, sy, r, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.fillStyle = colors.goal;
+            ctx.beginPath();
+            ctx.arc(sx, sy, r * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = colors.goal;
+            ctx.font = 'bold 14px Segoe UI';
+            ctx.textAlign = 'left';
+            ctx.fillText('GOAL', sx + r + 5, sy + 5);
+        }
+        
+        function drawBall(x, y, toScreenX, toScreenY, toScreenLen) {
+            const sx = toScreenX(x);
+            const sy = toScreenY(y);
+            const r = toScreenLen(0.08);
+            
+            if (isAnimating && Math.random() < 0.3) {
+                trailParticles.push({ x: sx, y: sy, life: 1, r: r * (0.5 + Math.random() * 0.5) });
+            }
+            
+            for (let i = trailParticles.length - 1; i >= 0; i--) {
+                const p = trailParticles[i];
+                p.life -= 0.02;
+                if (p.life <= 0) {
+                    trailParticles.splice(i, 1);
+                    continue;
+                }
+                ctx.fillStyle = `rgba(255,107,107,${p.life * 0.4})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 2);
+            grad.addColorStop(0, 'rgba(255,107,107,0.4)');
+            grad.addColorStop(1, 'rgba(255,107,107,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(sx, sy, r * 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = colors.ball;
+            ctx.beginPath();
+            ctx.arc(sx, sy, r, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.beginPath();
+            ctx.arc(sx - r * 0.3, sy - r * 0.3, r * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function spawnParticles(mathX, mathY, count, color = '#009650') {
+            if (!lastScreenTransform) return;
+            const { toScreenX, toScreenY } = lastScreenTransform;
+            for (let i = 0; i < count; i++) {
+                const angle = (i / count) * Math.PI * 2;
+                const speed = 0.5 + Math.random() * 1;
+                celebrationParticles.push({
+                    x: toScreenX(mathX), y: toScreenY(mathY),
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1,
+                    r: 3 + Math.random() * 4,
+                    color: color
+                });
+            }
+        }
+        
+        function drawCelebrationParticles() {
+            for (let i = celebrationParticles.length - 1; i >= 0; i--) {
+                const p = celebrationParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.02;
+                p.life -= 0.015;
+                if (p.life <= 0) {
+                    celebrationParticles.splice(i, 1);
+                    continue;
+                }
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawLabels(toScreenX, toScreenY) {
+            ctx.fillStyle = colors.dim;
+            ctx.font = '11px Segoe UI';
+            ctx.textAlign = 'center';
+            
+            for (let x = Math.ceil(canvasBounds.left); x <= Math.floor(canvasBounds.right); x++) {
+                if (x === 0) continue;
+                const sx = toScreenX(x);
+                const sy = toScreenY(0);
+                if (sx > 20 && sx < canvas.width / window.devicePixelRatio - 20) {
+                    ctx.fillText(x.toString(), sx, sy + 18);
+                }
+            }
+            for (let y = Math.ceil(canvasBounds.bottom); y <= Math.floor(canvasBounds.top); y++) {
+                if (y === 0) continue;
+                const sx = toScreenX(0);
+                const sy = toScreenY(y);
+                if (sy > 15 && sy < canvas.height / window.devicePixelRatio - 15) {
+                    ctx.textAlign = 'right';
+                    ctx.fillText(y.toString(), sx - 8, sy + 4);
+                }
+            }
+            ctx.textAlign = 'center';
+        }
+        
+        // ========== MATH HELPERS ==========
+        function evaluateFunction(f, x) {
+            try {
+                let e = f.replace(/x/g, '(' + x + ')').replace(/\^/g, '**')
+                    .replace(/sin/g, 'Math.sin').replace(/cos/g, 'Math.cos').replace(/tan/g, 'Math.tan')
+                    .replace(/sqrt/g, 'Math.sqrt').replace(/cbrt/g, 'Math.cbrt')
+                    .replace(/log10/g, 'Math.log10').replace(/log/g, 'Math.log').replace(/ln/g, 'Math.log')
+                    .replace(/abs/g, 'Math.abs').replace(/exp/g, 'Math.exp')
+                    .replace(/PI/g, 'Math.PI').replace(/pi/g, 'Math.PI').replace(/E(?!\w)/g, 'Math.E');
+                e = e.replace(/(\d)\(/g, '$1*(').replace(/\)\(/g, ')*(').replace(/\)(\d)/g, ')*$1');
+                return Function('"use strict"; return (' + e + ')')();
+            } catch(e) { return null; }
+        }
+        
+        function evaluateLimit(f, pt) {
+            const h = 1e-6;
+            try {
+                const L = evaluateFunction(f, pt - h);
+                const R = evaluateFunction(f, pt + h);
+                if (L!==null && R!==null && !isNaN(L) && !isNaN(R)) {
+                    if (Math.abs(L-R) < 0.01) return (L+R)/2;
+                    return (L+R)/2;
+                }
+                return null;
+            } catch(e) { return null; }
+        }
+        
+        // Check if function has a removable discontinuity (hole) at x = pt
+        function hasRemovableDiscontinuity(f, pt) {
+            try {
+                // Check if function is undefined at pt (e.g., division by zero)
+                const atPoint = evaluateFunction(f, pt);
+                const isUndefined = atPoint === null || isNaN(atPoint) || !isFinite(atPoint);
+                
+                // Check if limit exists at pt
+                const limitVal = evaluateLimit(f, pt);
+                const limitExists = limitVal !== null && !isNaN(limitVal) && isFinite(limitVal);
+                
+                return isUndefined && limitExists;
+            } catch(e) {
+                return false;
+            }
+        }
+        
+        function latexToJs(latex) {
+            return latex
+                .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
+                .replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)')
+                .replace(/\\sin/g, 'sin').replace(/\\cos/g, 'cos').replace(/\\tan/g, 'tan')
+                .replace(/\\ln/g, 'ln').replace(/\\log/g, 'log')
+                .replace(/\\pi/g, 'PI').replace(/\\cdot/g, '*')
+                .replace(/\^/g, '^')
+                .replace(/\{/g, '(').replace(/\}/g, ')')
+                .replace(/\\times/g, '*')
+                .replace(/\\div/g, '/');
+        }
+        
+        function jsToLatex(js) {
+            return js
+                .replace(/\*\*/g, '^')
+                .replace(/\*/g, ' ')
+                .replace(/Math\.sin/g, '\\sin')
+                .replace(/Math\.cos/g, '\\cos')
+                .replace(/Math\.tan/g, '\\tan')
+                .replace(/Math\.sqrt/g, '\\sqrt')
+                .replace(/Math\.log/g, '\\ln')
+                .replace(/Math\.PI/g, '\\pi')
+                .replace(/Math\.E/g, 'e')
+                .replace(/(\d)\(/g, '$1\\cdot(');
+        }
+        
+        // ========== UI HELPERS ==========
+        function updateStatus(msg, type) {
+            const s = document.getElementById('statusBar');
+            s.textContent = msg; 
+            s.className = 'status-bar ' + type;
+        }
+        
+        function toggleHint() {
+            const box = document.getElementById('hintBox');
+            box.classList.toggle('show');
+            document.getElementById('hintBtn').textContent = box.classList.contains('show') ? 'Hide Hint' : 'Show Hint';
+        }
+        
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !isAnimating) {
+                if (!document.getElementById('validateBtn').disabled) validateFunction();
+                else if (!document.getElementById('startBtn').disabled) startGame();
+            } else if (e.key === 'Escape' || e.key === 'r') resetLevel();
+            else if (e.key === 'n' && !isAnimating) nextLevel();
+            else if (e.key === 'h') toggleHint();
+        });
+        
+        document.getElementById('functionInput').addEventListener('blur', e => {
+            let v = e.target.value.trim()
+                .replace(/sin|cos|tan|sqrt|cbrt|log|ln|abs|exp/gi, m => m.toLowerCase())
+                .replace(/pi/gi, 'PI').replace(/e(?!\w)/g, 'E');
+            if (v !== e.target.value) e.target.value = v;
+        });
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>
