@@ -433,10 +433,12 @@ let winDelay = 0;
                 top: L.view.top + 0.5 
             };
             
-            ball.x = holeX - 2;
-            ball.y = canvasBounds.top - 0.5;
+            // Ball visible at start of expected path (left side, top of view)
+            const pathStartX = holeX - 2.5;
+            ball.x = pathStartX;
+            ball.y = canvasBounds.top - 0.3;
             ball.vx = 0; ball.vy = 0;
-            
+
             const timerEl = document.getElementById('timerDisplay');
             if (timerEl) { timerEl.textContent = '∞'; timerEl.className = 'timer-display'; }
             
@@ -536,6 +538,13 @@ let winDelay = 0;
                 validatedLimit = limitVal;
                 generatePathPoints(f, holeX, limitVal);
                 
+                // Position ball at path start so it's visible before clicking Start
+                if (pathPoints.length > 0) {
+                    ball.x = pathPoints[0].x;
+                    ball.y = pathPoints[0].y;
+                    ball.vx = 0; ball.vy = 0;
+                }
+                
                 document.getElementById('functionDisplay').className = 'function-display valid';
                 document.getElementById('functionDisplay').textContent = 'f(x) = ' + f + '  ✓ Limit = ' + limitVal.toFixed(3);
                 updateStatus(`✓ Valid! Limit ${limitVal.toFixed(3)} matches goal ${goalY}. Click Start.`, 'success');
@@ -545,6 +554,13 @@ let winDelay = 0;
                 validatedFunction = f;
                 validatedLimit = limitVal;
                 generatePathPoints(f, holeX, limitVal);
+                
+                // Position ball at path start so it's visible before clicking Start
+                if (pathPoints.length > 0) {
+                    ball.x = pathPoints[0].x;
+                    ball.y = pathPoints[0].y;
+                    ball.vx = 0; ball.vy = 0;
+                }
                 
                 document.getElementById('functionDisplay').className = 'function-display invalid';
                 document.getElementById('functionDisplay').textContent = 'f(x) = ' + f + '  ❌ Limit = ' + limitVal.toFixed(3) + ' ≠ ' + goalY;
@@ -618,9 +634,8 @@ let winDelay = 0;
             winDelay = 0;
             loseDelay = 0;
             
+            // Ball already positioned at path start from Validate - just confirm velocity reset
             if (pathPoints.length > 0) {
-                ball.x = pathPoints[0].x;
-                ball.y = pathPoints[0].y;
                 ball.vx = 0; ball.vy = 0;
             }
             
@@ -649,8 +664,11 @@ let winDelay = 0;
                     document.getElementById('validateBtn').disabled = false;
                     const timerEl = document.getElementById('timerDisplay');
                     if (timerEl) { timerEl.textContent = '∞'; timerEl.className = 'timer-display'; }
-                    ball.x = pathPoints[0]?.x || holeX - 2;
-                    ball.y = pathPoints[0]?.y || canvasBounds.top - 0.5;
+                    // Position ball at start of path
+                    const pathStartX = holeX - 2.5;
+                    ball.x = pathStartX;
+                    ball.y = canvasBounds.top - 0.3;
+                    ball.vx = 0; ball.vy = 0;
                     updateStatus('Click Start to try again, or Validate a new function.', 'warning');
                 }
             }
