@@ -327,8 +327,11 @@
         let canvas = null, ctx = null;
         let isAnimating = false;
         let gameStartTime = 0;
-let winDelay = 0;
+        let winDelay = 0;
         let loseDelay = 0;
+        
+        // Ball drop animation state
+        let ballDropAnim = { active: false, progress: 0, startY: 0, targetY: 0, targetX: 0 };
         
         let ball = { x: 0, y: 0, vx: 0, vy: 0, radius: 10 };
         let pathPoints = [];
@@ -538,10 +541,15 @@ let winDelay = 0;
                 validatedLimit = limitVal;
                 generatePathPoints(f, holeX, limitVal);
                 
-                // Position ball at path start so it's visible before clicking Start
+                // Start drop animation from top of canvas to path start
                 if (pathPoints.length > 0) {
-                    ball.x = pathPoints[0].x;
-                    ball.y = pathPoints[0].y;
+                    ballDropAnim.active = true;
+                    ballDropAnim.progress = 0;
+                    ballDropAnim.targetX = pathPoints[0].x;
+                    ballDropAnim.targetY = pathPoints[0].y;
+                    ballDropAnim.startY = canvasBounds.top + 1;
+                    ball.x = ballDropAnim.targetX;
+                    ball.y = ballDropAnim.startY;
                     ball.vx = 0; ball.vy = 0;
                 }
                 
@@ -555,10 +563,15 @@ let winDelay = 0;
                 validatedLimit = limitVal;
                 generatePathPoints(f, holeX, limitVal);
                 
-                // Position ball at path start so it's visible before clicking Start
+                // Start drop animation from top of canvas to path start
                 if (pathPoints.length > 0) {
-                    ball.x = pathPoints[0].x;
-                    ball.y = pathPoints[0].y;
+                    ballDropAnim.active = true;
+                    ballDropAnim.progress = 0;
+                    ballDropAnim.targetX = pathPoints[0].x;
+                    ballDropAnim.targetY = pathPoints[0].y;
+                    ballDropAnim.startY = canvasBounds.top + 1;
+                    ball.x = ballDropAnim.targetX;
+                    ball.y = ballDropAnim.startY;
                     ball.vx = 0; ball.vy = 0;
                 }
                 
@@ -629,15 +642,22 @@ let winDelay = 0;
             generatePathPoints(f, holeX, limitVal);
             validatedFunction = f;
             
+            // Start drop animation from top of canvas to path start
+            if (pathPoints.length > 0) {
+                ballDropAnim.active = true;
+                ballDropAnim.progress = 0;
+                ballDropAnim.targetX = pathPoints[0].x;
+                ballDropAnim.targetY = pathPoints[0].y;
+                ballDropAnim.startY = canvasBounds.top + 1;
+                ball.x = ballDropAnim.targetX;
+                ball.y = ballDropAnim.startY;
+                ball.vx = 0; ball.vy = 0;
+            }
+            
             isAnimating = true;
             gameStartTime = Date.now();
             winDelay = 0;
             loseDelay = 0;
-            
-            // Ball already positioned at path start from Validate - just confirm velocity reset
-            if (pathPoints.length > 0) {
-                ball.vx = 0; ball.vy = 0;
-            }
             
             document.getElementById('startBtn').disabled = true;
             document.getElementById('resetBtn').disabled = false;
@@ -645,6 +665,19 @@ let winDelay = 0;
         }
         
         function animate() {
+            // Handle ball drop animation (from Validate)
+            if (ballDropAnim.active) {
+                ballDropAnim.progress += 0.03;
+                if (ballDropAnim.progress >= 1) {
+                    ballDropAnim.progress = 1;
+                    ballDropAnim.active = false;
+                }
+                // Ease out cubic
+                const eased = 1 - Math.pow(1 - ballDropAnim.progress, 3);
+                ball.x = ballDropAnim.targetX;
+                ball.y = ballDropAnim.startY + (ballDropAnim.targetY - ballDropAnim.startY) * eased;
+            }
+            
             render();
             
             if (isAnimating) {
